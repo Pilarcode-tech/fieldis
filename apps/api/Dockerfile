@@ -1,6 +1,9 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
+# Install OpenSSL and libc compatibility (required by Prisma on Alpine)
+RUN apk add --no-cache openssl openssl-dev libc6-compat
+
 # Copy workspace config files
 COPY package.json package-lock.json turbo.json tsconfig.base.json ./
 COPY packages/database/package.json ./packages/database/
@@ -15,7 +18,7 @@ RUN npm install
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Generate Prisma client
+# Generate Prisma client (after OpenSSL is installed)
 RUN cd packages/database && npx prisma generate
 
 # Build internal packages and API
@@ -29,6 +32,9 @@ RUN mkdir -p apps/api/uploads
 # --- Production stage ---
 FROM node:20-alpine AS runner
 WORKDIR /app
+
+# Install OpenSSL (required by Prisma at runtime)
+RUN apk add --no-cache openssl libc6-compat
 
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/packages ./packages
