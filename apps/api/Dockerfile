@@ -36,11 +36,28 @@ WORKDIR /app
 # Install OpenSSL (required by Prisma at runtime)
 RUN apk add --no-cache openssl libc6-compat
 
+# Copy node_modules completo da raiz (includes all dependencies)
 COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/packages ./packages
+
+# Copy internal packages (compiled + config)
+COPY --from=base /app/packages/shared/dist ./packages/shared/dist
+COPY --from=base /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=base /app/packages/calculator/dist ./packages/calculator/dist
+COPY --from=base /app/packages/calculator/package.json ./packages/calculator/package.json
+COPY --from=base /app/packages/database/dist ./packages/database/dist
+COPY --from=base /app/packages/database/package.json ./packages/database/package.json
+COPY --from=base /app/packages/database/prisma ./packages/database/prisma
+COPY --from=base /app/packages/database/index.ts ./packages/database/index.ts
+
+# Copy database node_modules (Prisma client generated here)
+COPY --from=base /app/packages/database/node_modules ./packages/database/node_modules
+
+# Copy compiled API
 COPY --from=base /app/apps/api/dist ./apps/api/dist
-COPY --from=base /app/apps/api/package.json ./apps/api/
-COPY --from=base /app/apps/api/uploads ./apps/api/uploads
+COPY --from=base /app/apps/api/package.json ./apps/api/package.json
+
+# Create uploads directory
+RUN mkdir -p /app/apps/api/uploads
 
 EXPOSE 3001
 
