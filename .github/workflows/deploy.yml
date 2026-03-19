@@ -34,10 +34,21 @@ jobs:
           host: 77.37.41.218
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
-          command_timeout: 5m
+          command_timeout: 10m
           script: |
-            cd /opt/fieldis
+            # Login no registry
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u euhenriquefranca --password-stdin
+
+            # Garantir que a rede existe
+            docker network create traefik_default 2>/dev/null || true
+
+            # Pull da nova imagem
             docker pull ghcr.io/pilarcode-tech/fieldis-api:latest
-            docker compose up -d --force-recreate api
+
+            # Recriar apenas o container da API
+            cd /opt/fieldis
+            docker compose up -d --force-recreate --no-deps api
+
+            # Verificar se subiu
             sleep 5
             docker ps | grep fieldis-api
