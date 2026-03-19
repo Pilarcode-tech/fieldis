@@ -1,7 +1,7 @@
 {
   "name": "@fieldis/database",
   "version": "0.1.0",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

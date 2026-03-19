@@ -13,9 +13,10 @@ RUN npm install
 # Gerar Prisma client
 RUN cd packages/database && npx prisma generate
 
-# Build dos pacotes internos
+# Build dos pacotes internos (na ordem de dependência)
 RUN npx tsc --project packages/shared/tsconfig.json || true
 RUN npx tsc --project packages/calculator/tsconfig.json || true
+RUN npx tsc --project packages/database/tsconfig.json || true
 
 # Build da API
 RUN npx tsc --project apps/api/tsconfig.json
