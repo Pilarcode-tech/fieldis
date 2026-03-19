@@ -1484,3 +1484,122 @@ A página de gestão de usuários fica em `/configuracoes/usuarios` e é acessí
 - Criar novos usuários com seleção de perfil, senha opcional, vinculação a projetos (SUPERVISOR) ou funcionário (EMPLOYEE)
 - Editar dados do usuário (nome, email, perfil, status)
 - Desativar usuários (soft delete)
+
+---
+
+## Deploy em produção
+
+### Arquitetura
+
+| Serviço | Plataforma | Função |
+|---------|-----------|--------|
+| Frontend | Vercel | Next.js 14, SSR, autenticação via NextAuth |
+| API | Railway | Fastify 4, lógica de negócio, cálculo de folha |
+| Banco | Neon | PostgreSQL 16, RLS multi-tenant |
+| Cache | Railway | Redis 7, blacklist de tokens e cache do dashboard |
+| Documentos | Disco local (Railway) ou Cloudflare R2 | Upload de ASOs, NRs, CNH |
+
+### Ordem de deploy
+
+1. **Neon** — Criar banco e copiar a connection string
+2. **Railway** — Deploy da API + Redis, rodar migrations
+3. **Vercel** — Deploy do frontend, conectar à API
+
+### Passo a passo
+
+**1. Neon (banco de dados)**
+
+Criar projeto no Neon, copiar a connection string. O formato será:
+```
+postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/fieldis?sslmode=require
+```
+O `?sslmode=require` é obrigatório — o Neon exige SSL.
+
+**2. Railway (API + Redis)**
+
+Criar novo projeto no Railway. Adicionar dois serviços:
+
+Serviço 1 — **Redis**: Adicionar serviço Redis pelo template do Railway. A `REDIS_URL` é gerada automaticamente.
+
+Serviço 2 — **API**: Conectar ao repositório GitHub. Configurar:
+- Root Directory: `/` (raiz — o Dockerfile referencia o monorepo inteiro)
+- Dockerfile Path: `apps/api/Dockerfile`
+
+Variáveis de ambiente:
+```
+DATABASE_URL=postgresql://user:pass@host.neon.tech/fieldis?sslmode=require
+REDIS_URL=${{Redis.REDIS_URL}}
+JWT_SECRET=<gerar com: openssl rand -hex 32>
+JWT_EXPIRES_IN=8h
+JWT_REFRESH_EXPIRES_IN=7d
+API_HOST=0.0.0.0
+FRONTEND_URL=https://seu-projeto.vercel.app
+LOG_LEVEL=info
+```
+
+O Railway injeta `PORT` automaticamente — o servidor já lê `process.env.PORT`.
+
+**3. Vercel (frontend)**
+
+Criar projeto no Vercel conectando ao repositório GitHub. Configurar:
+- Framework: Next.js
+- Root Directory: `apps/web`
+
+O `vercel.json` em `apps/web/` já configura o build command para o monorepo.
+
+Variáveis de ambiente:
+```
+NEXTAUTH_SECRET=<gerar com: openssl rand -hex 32>
+NEXTAUTH_URL=https://seu-projeto.vercel.app
+NEXT_PUBLIC_API_URL=https://sua-api.railway.app/api/v1
+API_URL=https://sua-api.railway.app/api/v1
+```
+
+### Variáveis de ambiente por serviço
+
+**Vercel (frontend):**
+- `NEXTAUTH_SECRET` — chave secreta para sessões
+- `NEXTAUTH_URL` — URL pública do frontend
+- `NEXT_PUBLIC_API_URL` — URL da API (exposta ao browser)
+- `API_URL` — URL da API (server-side)
+
+**Railway API:**
+- `DATABASE_URL` — connection string do Neon com `?sslmode=require`
+- `REDIS_URL` — gerado pelo Redis do Railway
+- `JWT_SECRET` — chave secreta para tokens JWT
+- `JWT_EXPIRES_IN` — duração do token (ex: `8h`)
+- `JWT_REFRESH_EXPIRES_IN` — duração do refresh token (ex: `7d`)
+- `API_HOST` — `0.0.0.0`
+- `FRONTEND_URL` — URL do Vercel (para CORS)
+- `LOG_LEVEL` — `info` ou `warn`
+
+**Railway Redis:**
+- Sem configuração manual — Railway provê automaticamente
+
+**Neon:**
+- Sem variáveis no Neon — a connection string é usada como `DATABASE_URL` no Railway
+
+**Cloudflare R2 (opcional):**
+- `R2_BUCKET` — nome do bucket
+- `R2_ACCOUNT_ID` — ID da conta Cloudflare
+- `R2_ACCESS_KEY_ID` — chave de acesso
+- `R2_SECRET_ACCESS_KEY` — chave secreta
+- Instalar `@aws-sdk/client-s3` quando ativar
+
+### Storage de documentos
+
+Por padrão, os documentos são salvos no disco do Railway em `uploads/`. Para produção escalada ou múltiplas instâncias, configurar Cloudflare R2 preenchendo as variáveis `R2_*`. O código detecta automaticamente — se `R2_BUCKET` estiver definido, usa R2; caso contrário, usa disco local.
+
+### Migrations
+
+As migrations rodam automaticamente no startup do container Docker (`prisma migrate deploy`). Para rodar manualmente:
+```bash
+DATABASE_URL="..." npx prisma migrate deploy --schema packages/database/prisma/schema.prisma
+```
+
+### Seed (dados de demonstração)
+
+Para popular o banco com dados de demo após o deploy:
+```bash
+DATABASE_URL="..." npx tsx packages/database/prisma/seed.ts
+```

@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "start:prod": "cd ../../packages/database && npx prisma migrate deploy && cd ../../apps/api && node dist/server.js"
   },
   "dependencies": {
     "@fastify/cookie": "^9.3.1",

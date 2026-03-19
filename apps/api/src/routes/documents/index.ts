@@ -1,9 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { createReadStream, existsSync } from 'fs'
-import { join } from 'path'
 import { tenantMiddleware } from '../../middleware/tenant'
-
-const UPLOADS_DIR = join(process.cwd(), 'uploads')
+import { getFileStream } from '../../lib/storage'
 
 const MIME_TYPES: Record<string, string> = {
   '.pdf': 'application/pdf',
@@ -25,9 +22,9 @@ export default async function documentRoutes(fastify: FastifyInstance) {
       return reply.status(403).send({ error: 'Acesso negado' })
     }
 
-    const filePath = join(UPLOADS_DIR, fileName)
+    const stream = await getFileStream(fileName)
 
-    if (!existsSync(filePath)) {
+    if (!stream) {
       return reply.status(404).send({ error: 'Arquivo não encontrado' })
     }
 
@@ -35,6 +32,6 @@ export default async function documentRoutes(fastify: FastifyInstance) {
     const contentType = MIME_TYPES[ext] || 'application/octet-stream'
 
     reply.header('Content-Type', contentType)
-    return reply.send(createReadStream(filePath))
+    return reply.send(stream)
   })
 }

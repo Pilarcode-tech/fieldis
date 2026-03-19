@@ -3,10 +3,9 @@ import { prisma } from '@fieldis/database'
 import { CreateEmployeeSchema, UpdateEmployeeSchema } from '@fieldis/shared'
 import { tenantMiddleware } from '../../middleware/tenant'
 import { roleGuard } from '../../middleware/roleGuard'
-import { writeFile, mkdir } from 'fs/promises'
-import { join, extname } from 'path'
+import { extname } from 'path'
+import { saveFile } from '../../lib/storage'
 
-const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
@@ -404,9 +403,8 @@ export default async function employeeRoutes(fastify: FastifyInstance) {
       const ext = extname(originalFileName).toLowerCase()
       const savedFileName = `${companyId}_${id}_${fields.type}_${Date.now()}${ext}`
 
-      // Ensure uploads directory exists
-      await mkdir(UPLOADS_DIR, { recursive: true })
-      await writeFile(join(UPLOADS_DIR, savedFileName), fileBuffer)
+      // Save file via storage abstraction (disk or R2)
+      const fileUrl = await saveFile(savedFileName, fileBuffer)
 
       const document = await prisma.document.create({
         data: {
@@ -414,7 +412,7 @@ export default async function employeeRoutes(fastify: FastifyInstance) {
           employeeId: id,
           type: fields.type as import('@prisma/client').DocumentType,
           fileName: originalFileName,
-          fileUrl: `/documentos/${savedFileName}`,
+          fileUrl,
           issuedAt: fields.issuedAt ? new Date(fields.issuedAt) : undefined,
           expiresAt: fields.expiresAt ? new Date(fields.expiresAt) : undefined,
           notes: fields.notes,

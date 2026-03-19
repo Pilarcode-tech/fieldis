@@ -31,10 +31,15 @@ export async function tenantMiddleware(
 
     // Check if token has been blacklisted (invalidated via logout)
     if (decoded.jti) {
-      const isBlacklisted = await redis.get(`blacklist:${decoded.jti}`)
-      if (isBlacklisted) {
-        reply.status(401).send({ error: 'Token invalidado' })
-        return
+      try {
+        const blacklisted = await redis.get(`blacklist:${decoded.jti}`)
+        if (blacklisted) {
+          reply.status(401).send({ error: 'Token invalidado' })
+          return
+        }
+      } catch {
+        // Redis unavailable — skip blacklist check, token remains valid until expiry
+        request.log.warn('Redis indisponível — blacklist de token ignorada')
       }
     }
 
