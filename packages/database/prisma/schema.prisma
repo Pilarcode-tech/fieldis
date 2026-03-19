@@ -1,0 +1,404 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ──────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────
+
+enum PlanType {
+  BASICO
+  PROFISSIONAL
+  EMPRESARIAL
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  RH_MANAGER
+  FINANCIAL_MANAGER
+  SUPERVISOR
+  EMPLOYEE
+  AUDITOR
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  VACATION
+  TERMINATED
+}
+
+enum DocumentType {
+  RG
+  CPF
+  CTPS
+  PIS
+  ASO
+  CNH
+  COMPROVANTE_RESIDENCIA
+  CONTRATO_TRABALHO
+  TERMO_EPI
+  NR_10
+  NR_33
+  NR_35
+  OUTROS
+}
+
+enum DocumentStatus {
+  PENDING
+  VALID
+  EXPIRED
+  REJECTED
+}
+
+enum ProjectCostCategory {
+  MATERIAL
+  EQUIPAMENTO
+  TRANSPORTE
+  ALIMENTACAO
+  HOSPEDAGEM
+  OUTROS
+}
+
+enum ObraStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  FINISHED
+}
+
+enum PayrollStatus {
+  OPEN
+  REVIEW
+  CLOSED
+  PAID
+}
+
+enum AdvanceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISCOUNTED
+}
+
+enum SalaryType {
+  MONTHLY
+  HOURLY
+  DAILY
+}
+
+// ──────────────────────────────────────
+// MODELS
+// ──────────────────────────────────────
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String   @unique
+  plan      PlanType @default(BASICO)
+  active    Boolean  @default(true)
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users              User[]
+  obras              Obra[]
+  employees          Employee[]
+  employeeAllocations EmployeeAllocation[]
+  documents          Document[]
+  timeRecords        TimeRecord[]
+  epiDeliveries      EpiDelivery[]
+  payrollPeriods     PayrollPeriod[]
+  payrollItems       PayrollItem[]
+  advances           Advance[]
+  projectCosts       ProjectCost[]
+}
+
+model User {
+  id         String   @id @default(uuid())
+  companyId  String
+  email      String
+  name       String
+  password   String
+  role       UserRole @default(EMPLOYEE)
+  active     Boolean  @default(true)
+  employeeId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee      Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  obraUsers     ObraUser[]
+  projectCosts  ProjectCost[]
+
+  @@unique([companyId, email])
+}
+
+model ObraUser {
+  id     String @id @default(uuid())
+  userId String
+  obraId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, obraId])
+}
+
+model Obra {
+  id           String     @id @default(uuid())
+  companyId    String
+  name         String
+  code         String
+  address      String?
+  city         String?
+  state        String?
+  status       ObraStatus @default(PLANNING)
+  startDate    DateTime
+  endDate      DateTime?
+  budgetedCost Float      @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  obraUsers           ObraUser[]
+  employeeAllocations EmployeeAllocation[]
+  timeRecords         TimeRecord[]
+  epiDeliveries       EpiDelivery[]
+  payrollItems        PayrollItem[]
+  projectCosts        ProjectCost[]
+
+  @@index([companyId, status])
+}
+
+model Employee {
+  id               String         @id @default(uuid())
+  companyId        String
+  name             String
+  cpf              String
+  rg               String?
+  birthDate        DateTime?
+  phone            String?
+  email            String?
+  address          String?
+  pis              String?
+  ctpsNumber       String?
+  role             String
+  department       String?
+  status           EmployeeStatus @default(ACTIVE)
+  hireDate         DateTime
+  terminatedAt     DateTime?
+  baseSalary       Float
+  salaryType       SalaryType     @default(MONTHLY)
+  hoursPerDay      Float          @default(8)
+  hasInsalubrity   Boolean        @default(false)
+  insalubrityGrade String?
+  hasPericulosity  Boolean        @default(false)
+  hasNightShift    Boolean        @default(false)
+  hasVT            Boolean        @default(true)
+  hasVA            Boolean        @default(false)
+  vaAmount         Float          @default(0)
+  bankCode         String?
+  bankAgency       String?
+  bankAccount      String?
+  dependentsCount  Int            @default(0)
+  hasAlimony       Boolean        @default(false)
+  alimonyAmount    Float          @default(0)
+  photoUrl         String?
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users               User[]
+  employeeAllocations EmployeeAllocation[]
+  documents           Document[]
+  timeRecords         TimeRecord[]
+  epiDeliveries       EpiDelivery[]
+  payrollItems        PayrollItem[]
+  advances            Advance[]
+
+  @@unique([companyId, cpf])
+  @@index([companyId, status])
+}
+
+model EmployeeAllocation {
+  id         String   @id @default(uuid())
+  companyId  String
+  employeeId String
+  obraId     String
+  startDate  DateTime
+  endDate    DateTime?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  obra     Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, obraId, startDate])
+  @@index([companyId, obraId, active])
+}
+
+model Document {
+  id         String         @id @default(uuid())
+  companyId  String
+  employeeId String
+  type       DocumentType
+  fileUrl    String
+  fileName   String
+  status     DocumentStatus @default(PENDING)
+  issuedAt   DateTime?
+  expiresAt  DateTime?
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, expiresAt])
+}
+
+model TimeRecord {
+  id              String   @id @default(uuid())
+  companyId       String
+  employeeId      String
+  obraId          String
+  clockIn         DateTime
+  clockOut        DateTime?
+  breakMinutes    Int      @default(0)
+  photoInUrl      String?
+  latIn           Float?
+  lngIn           Float?
+  source          String   @default("MANUAL")
+  recordedById    String?
+  workedMinutes   Int?
+  overtimeMinutes Int?
+  isAbsence       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  obra     Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, clockIn])
+}
+
+model EpiDelivery {
+  id           String    @id @default(uuid())
+  companyId    String
+  employeeId   String
+  obraId       String
+  itemName     String
+  itemCode     String?
+  quantity     Int       @default(1)
+  deliveredAt  DateTime  @default(now())
+  signatureUrl String?
+  signedAt     DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  obra     Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
+
+model PayrollPeriod {
+  id         String        @id @default(uuid())
+  companyId  String
+  month      Int
+  year       Int
+  status     PayrollStatus @default(OPEN)
+  closedAt   DateTime?
+  closedById String?
+  paidAt     DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  payrollItems PayrollItem[]
+
+  @@unique([companyId, month, year])
+}
+
+model PayrollItem {
+  id                 String   @id @default(uuid())
+  companyId          String
+  periodId           String
+  employeeId         String
+  obraId             String?
+  baseSalary         Float
+  workedDays         Float
+  overtimeHours      Float    @default(0)
+  overtimeValue      Float    @default(0)
+  nightShiftValue    Float    @default(0)
+  insalubrityValue   Float    @default(0)
+  periculosityValue  Float    @default(0)
+  dsrValue           Float    @default(0)
+  inssDiscount       Float    @default(0)
+  irrfDiscount       Float    @default(0)
+  vtDiscount         Float    @default(0)
+  advancesDiscount   Float    @default(0)
+  absencesDiscount   Float    @default(0)
+  alimonyDiscount    Float    @default(0)
+  fgtsValue          Float    @default(0)
+  grossSalary        Float
+  totalDiscounts     Float
+  netSalary          Float
+  companyCost        Float
+  payslipUrl         String?
+  createdAt          DateTime @default(now())
+
+  company  Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  period   PayrollPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  employee Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  obra     Obra?         @relation(fields: [obraId], references: [id], onDelete: SetNull)
+
+  @@unique([periodId, employeeId])
+}
+
+model Advance {
+  id            String        @id @default(uuid())
+  companyId     String
+  employeeId    String
+  amount        Float
+  reason        String?
+  status        AdvanceStatus @default(PENDING)
+  requestedAt   DateTime      @default(now())
+  reviewedAt    DateTime?
+  discountMonth Int?
+  discountYear  Int?
+  createdAt     DateTime      @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model ProjectCost {
+  id            String              @id @default(uuid())
+  companyId     String
+  obraId        String
+  category      ProjectCostCategory
+  description   String
+  amount        Float
+  date          DateTime
+  invoiceNumber String?
+  createdById   String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  obra      Obra    @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  createdBy User    @relation(fields: [createdById], references: [id])
+
+  @@index([companyId, obraId])
+}

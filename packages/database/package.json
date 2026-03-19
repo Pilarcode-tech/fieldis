@@ -1,0 +1,21 @@
+{
+  "name": "@fieldis/database",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "scripts": {
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0"
+  },
+  "devDependencies": {
+    "bcryptjs": "^2.4.3",
+    "prisma": "^5.14.0",
+    "tsx": "^4.13.0",
+    "@types/bcryptjs": "^2.4.6"
+  }
+}
