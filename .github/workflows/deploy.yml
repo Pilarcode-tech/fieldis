@@ -34,9 +34,10 @@ jobs:
           host: 77.37.41.218
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
+          command_timeout: 5m
           script: |
             cd /opt/fieldis
             docker pull ghcr.io/pilarcode-tech/fieldis-api:latest
-            docker compose down api
-            docker compose up -d api
-            docker system prune -f
+            docker compose up -d --force-recreate api
+            sleep 5
+            docker ps | grep fieldis-api
