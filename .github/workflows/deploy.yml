@@ -1,0 +1,42 @@
+name: Deploy Fieldis
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build e push da imagem Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ghcr.io/pilarcode-tech/fieldis-api:latest
+
+      - name: Deploy no servidor via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 77.37.41.218
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /opt/fieldis
+            docker pull ghcr.io/pilarcode-tech/fieldis-api:latest
+            docker compose down api
+            docker compose up -d api
+            docker system prune -f
