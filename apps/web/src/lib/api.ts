@@ -1,8 +1,14 @@
 import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
 
+// Browser: use proxy via Vercel rewrites (avoids mixed content HTTPS→HTTP)
+// Server (SSR): call API directly
+const baseURL = typeof window !== 'undefined'
+  ? '/api/proxy'
+  : (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1')
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
