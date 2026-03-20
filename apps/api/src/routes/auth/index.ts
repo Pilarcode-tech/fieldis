@@ -136,4 +136,46 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.send({ message: 'Logout realizado com sucesso' })
     }
   })
+
+  // POST /change-password - Change own password
+  fastify.post('/change-password', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      await request.jwtVerify()
+      const payload = request.user as { userId: string }
+
+      const body = request.body as { currentPassword: string; newPassword: string }
+
+      if (!body.currentPassword || !body.newPassword) {
+        return reply.status(400).send({ error: 'Senha atual e nova senha são obrigatórias' })
+      }
+
+      if (body.newPassword.length < 6) {
+        return reply.status(400).send({ error: 'A nova senha deve ter no mínimo 6 caracteres' })
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+      })
+
+      if (!user) {
+        return reply.status(404).send({ error: 'Usuário não encontrado' })
+      }
+
+      const isValid = await bcrypt.compare(body.currentPassword, user.password)
+      if (!isValid) {
+        return reply.status(401).send({ error: 'Senha atual incorreta' })
+      }
+
+      const hashed = await bcrypt.hash(body.newPassword, 10)
+      await prisma.user.update({
+        where: { id: payload.userId },
+        data: { password: hashed },
+      })
+
+      return reply.send({ message: 'Senha alterada com sucesso' })
+    } catch (err) {
+      request.log.error(err)
+      return reply.status(500).send({ error: 'Erro ao alterar senha' })
+    }
+  })
 }

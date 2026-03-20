@@ -825,3 +825,52 @@ export function useNotifications() {
     refetchOnWindowFocus: true,
   })
 }
+
+// Company
+interface CompanyData {
+  id: string
+  name: string
+  tradeName: string | null
+  cnpj: string
+  stateRegistration: string | null
+  plan: string
+  active: boolean
+  phone: string | null
+  email: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  zipCode: string | null
+}
+
+export function useCompany() {
+  return useQuery<CompanyData>({
+    queryKey: ['company'],
+    queryFn: async () => {
+      const { data } = await api.get('/company')
+      return data
+    },
+  })
+}
+
+export function useUpdateCompany() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: Partial<CompanyData>) => {
+      const { data } = await api.patch('/company', body)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company'] })
+    },
+  })
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (body: { currentPassword: string; newPassword: string }) => {
+      const { data } = await api.post('/auth/change-password', body)
+      return data
+    },
+  })
+}

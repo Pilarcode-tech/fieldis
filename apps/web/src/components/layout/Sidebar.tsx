@@ -81,7 +81,10 @@ export function Sidebar() {
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href)
+            // Exact match for items that have sub-routes as separate sidebar items
+            const isActive = item.href === '/configuracoes'
+              ? pathname === '/configuracoes'
+              : pathname.startsWith(item.href)
             const Icon = item.icon
 
             return (
