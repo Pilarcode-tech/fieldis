@@ -172,7 +172,7 @@ export default function FuncionarioDetailPage() {
     }
   }
 
-  const apiBaseUrl = '/api/proxy'
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
   async function handleViewDoc(docId: string, fileUrl: string) {
     setLoadingDoc(docId)
