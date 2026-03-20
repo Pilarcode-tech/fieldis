@@ -140,12 +140,21 @@ export default function LandingPage() {
                 Ver demonstração
               </Link>
             </div>
-            <div className="mt-10 flex items-center gap-6 text-sm text-white/70">
-              <span className="font-semibold text-white">500+</span> funcionários gerenciados
-              <span className="h-4 w-px bg-white/30" />
-              <span className="font-semibold text-white">100%</span> das verbas trabalhistas
-              <span className="h-4 w-px bg-white/30" />
-              <span className="font-semibold text-white">Zero</span> planilhas
+            <div className="mt-10 flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 sm:gap-6 pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-white">500+</span>
+                <span className="text-sm text-white/70">funcionários gerenciados</span>
+              </div>
+              <div className="hidden sm:block h-4 w-px bg-white/30" />
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-white">100%</span>
+                <span className="text-sm text-white/70">das verbas trabalhistas</span>
+              </div>
+              <div className="hidden sm:block h-4 w-px bg-white/30" />
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-white">Zero</span>
+                <span className="text-sm text-white/70">planilhas</span>
+              </div>
             </div>
           </div>
         </div>
