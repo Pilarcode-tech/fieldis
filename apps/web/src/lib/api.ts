@@ -22,6 +22,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       await signOut({ callbackUrl: '/login' })
     }
+    if (error.response?.status === 403 && error.response?.data?.code === 'SUBSCRIPTION_INACTIVE') {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/assinatura-inativa'
+      }
+    }
     return Promise.reject(error)
   }
 )

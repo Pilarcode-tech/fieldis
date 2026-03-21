@@ -90,7 +90,7 @@ export default function LandingPage() {
             <Link href="/login" className={`text-sm font-medium transition-colors hover:text-[#2563eb] ${scrolled ? 'text-[#6b7280]' : 'text-white/80'}`}>
               Entrar
             </Link>
-            <Link href="/login" className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1d4ed8]">
+            <Link href="/checkout?plano=PROFISSIONAL" className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1d4ed8]">
               Começar grátis
             </Link>
           </div>
@@ -110,7 +110,7 @@ export default function LandingPage() {
             ))}
             <div className="mt-3 flex flex-col gap-2">
               <Link href="/login" className="text-center text-sm font-medium text-[#6b7280]">Entrar</Link>
-              <Link href="/login" className="rounded-lg bg-[#2563eb] px-4 py-2.5 text-center text-sm font-medium text-white">Começar grátis</Link>
+              <Link href="/checkout?plano=PROFISSIONAL" className="rounded-lg bg-[#2563eb] px-4 py-2.5 text-center text-sm font-medium text-white">Começar grátis</Link>
             </div>
           </div>
         )}
@@ -133,7 +133,7 @@ export default function LandingPage() {
               Do registro de ponto na frente de serviço ao fechamento da folha com insalubridade, periculosidade e horas extras — tudo integrado.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/login" className="rounded-lg bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]">
+              <Link href="/checkout?plano=PROFISSIONAL" className="rounded-lg bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]">
                 Começar grátis
               </Link>
               <Link href="/login" className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20">
@@ -235,7 +235,7 @@ export default function LandingPage() {
                 <li>Todos os módulos incluídos</li>
                 <li>Suporte por e-mail</li>
               </ul>
-              <Link href="/login" className="mt-6 block rounded-lg border border-[#2563eb] py-2.5 text-center text-sm font-medium text-[#2563eb] transition-colors hover:bg-[#eff6ff]">
+              <Link href="/checkout?plano=BASICO" className="mt-6 block rounded-lg border border-[#2563eb] py-2.5 text-center text-sm font-medium text-[#2563eb] transition-colors hover:bg-[#eff6ff]">
                 Começar grátis
               </Link>
             </div>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 <li>Suporte prioritário</li>
                 <li>Exportação de relatórios</li>
               </ul>
-              <Link href="/login" className="mt-6 block rounded-lg bg-[#2563eb] py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#1d4ed8]">
+              <Link href="/checkout?plano=PROFISSIONAL" className="mt-6 block rounded-lg bg-[#2563eb] py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#1d4ed8]">
                 Começar grátis
               </Link>
             </div>
@@ -309,7 +309,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white">Pronto para sair das planilhas?</h2>
           <p className="mt-4 text-white/70">Configure em minutos. 14 dias grátis. Sem cartão de crédito.</p>
-          <Link href="/login" className="mt-8 inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-[#1e3a5f] transition-colors hover:bg-[#f1f5f9]">
+          <Link href="/checkout?plano=PROFISSIONAL" className="mt-8 inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-[#1e3a5f] transition-colors hover:bg-[#f1f5f9]">
             Começar grátis agora
           </Link>
         </div>

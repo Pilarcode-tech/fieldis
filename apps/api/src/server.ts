@@ -26,6 +26,8 @@ import notificationRoutes from './routes/notifications/index'
 import userRoutes from './routes/users/index'
 import documentRoutes from './routes/documents/index'
 import companyRoutes from './routes/company/index'
+import checkoutRoutes from './routes/checkout/index'
+import asaasWebhookRoutes from './routes/webhooks/asaas'
 import { startAlertsCron } from './jobs/alerts'
 import { redis } from './lib/redis'
 
@@ -129,6 +131,8 @@ async function bootstrap() {
   await fastify.register(userRoutes, { prefix: '/api/v1/users' })
   await fastify.register(documentRoutes, { prefix: '/api/v1/documentos' })
   await fastify.register(companyRoutes, { prefix: '/api/v1/company' })
+  await fastify.register(checkoutRoutes, { prefix: '/api/v1/checkout' })
+  await fastify.register(asaasWebhookRoutes, { prefix: '/api/v1/webhooks/asaas' })
 
   // ── Cron jobs ────────────────────────────────────────────────
   startAlertsCron()

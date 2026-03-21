@@ -60,6 +60,19 @@ export async function tenantMiddleware(
     request.role = decoded.role
     request.employeeId = decoded.employeeId ?? null
 
+    // Check if company is active (subscription valid)
+    const company = await prisma.company.findUnique({
+      where: { id: decoded.companyId },
+      select: { active: true },
+    })
+    if (!company?.active) {
+      reply.status(403).send({
+        error: 'Assinatura inativa. Regularize seu pagamento.',
+        code: 'SUBSCRIPTION_INACTIVE',
+      })
+      return
+    }
+
     // Set tenant context for RLS at the database level
     await prisma.$executeRawUnsafe(
       `SET LOCAL "app.current_tenant" = '${decoded.companyId}'`,

@@ -115,6 +115,21 @@ export default async function employeeRoutes(fastify: FastifyInstance) {
 
       const data = parsed.data
 
+      // Check plan employee limit
+      const PLAN_LIMITS: Record<string, number> = { BASICO: 30, PROFISSIONAL: 100, EMPRESARIAL: Infinity }
+      const company = await prisma.company.findUnique({ where: { id: companyId }, select: { plan: true } })
+      const activeCount = await prisma.employee.count({ where: { companyId, status: { not: 'TERMINATED' } } })
+      const limit = PLAN_LIMITS[company?.plan ?? 'BASICO'] ?? 30
+      if (activeCount >= limit) {
+        return reply.status(403).send({
+          error: 'Limite de funcionários atingido para o plano atual.',
+          code: 'PLAN_LIMIT_REACHED',
+          limit,
+          current: activeCount,
+          plan: company?.plan,
+        })
+      }
+
       // Check for duplicate CPF within the same company
       const existing = await prisma.employee.findFirst({
         where: { companyId, cpf: data.cpf },

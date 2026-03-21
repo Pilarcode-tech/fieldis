@@ -408,3 +408,18 @@ model ProjectCost {
 
   @@index([companyId, obraId])
 }
+
+model CheckoutLead {
+  id                    String   @id @default(uuid())
+  cnpj                  String   @unique
+  razaoSocial           String
+  email                 String
+  nomeResponsavel       String
+  telefone              String?
+  plano                 PlanType
+  asaasCustomerId       String?
+  asaasSubscriptionId   String?
+  status                String   @default("PENDING")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
