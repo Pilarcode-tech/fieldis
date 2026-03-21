@@ -160,18 +160,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ═══ PROVA SOCIAL ═══ */}
-      <Section className="bg-[#f9fafb] py-12">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
-          <p className="mb-8 text-sm font-medium text-[#9ca3af]">Confiado por empresas de montagem em todo o Brasil</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-            {['Eletromonte', 'Voltec Engenharia', 'NovaPower', 'Montagem Sul', 'Energia Brasil'].map(name => (
-              <span key={name} className="text-lg font-bold tracking-wide text-[#d1d5db]">{name}</span>
-            ))}
-          </div>
-        </div>
-      </Section>
-
       {/* ═══ PARA QUEM É ═══ */}
       <Section id="para-quem" className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
