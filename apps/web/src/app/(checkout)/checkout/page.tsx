@@ -1,11 +1,9 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { Zap, CreditCard, FileText, QrCode, ArrowLeft } from 'lucide-react'
+import { CreditCard, FileText, QrCode, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
 
 const PLANS: Record<string, { name: string; price: string; value: number }> = {
@@ -14,7 +12,7 @@ const PLANS: Record<string, { name: string; price: string; value: number }> = {
   EMPRESARIAL: { name: 'Empresarial', price: 'R$ 997/mês', value: 997 },
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const planoParam = searchParams.get('plano')?.toUpperCase() || 'PROFISSIONAL'
   const plan = PLANS[planoParam] || PLANS.PROFISSIONAL
@@ -22,14 +20,11 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // Step 1 fields
   const [razaoSocial, setRazaoSocial] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [nomeResponsavel, setNomeResponsavel] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
-
-  // Step 2 fields
   const [formaPagamento, setFormaPagamento] = useState('CREDIT_CARD')
 
   function formatCnpj(value: string) {
@@ -84,7 +79,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      {/* Progress */}
       <div className="mb-8 flex items-center gap-4">
         <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${step >= 1 ? 'bg-[#2563eb] text-white' : 'bg-[#e3e6ed] text-[#9ca3af]'}`}>1</div>
         <div className={`h-0.5 flex-1 ${step >= 2 ? 'bg-[#2563eb]' : 'bg-[#e3e6ed]'}`} />
@@ -170,5 +164,17 @@ export default function CheckoutPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[#9ca3af]">Carregando...</p>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
