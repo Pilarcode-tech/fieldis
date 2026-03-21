@@ -26,10 +26,15 @@ export async function createCustomer(data: {
   cpfCnpj: string
   phone?: string
 }): Promise<AsaasCustomer> {
+  const payload = {
+    ...data,
+    cpfCnpj: data.cpfCnpj.replace(/\D/g, ''),
+    phone: data.phone?.replace(/\D/g, '') || undefined,
+  }
   const res = await fetch(`${ASAAS_BASE_URL}/customers`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
