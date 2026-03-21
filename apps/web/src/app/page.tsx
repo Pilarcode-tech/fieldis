@@ -59,7 +59,7 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
-  const whatsappUrl = 'https://wa.me/5511999999999?text=Ol%C3%A1%2C+tenho+interesse+no+Fieldis'
+  const whatsappUrl = 'https://wa.me/5511918958384?text=Ol%C3%A1%2C+tenho+interesse+no+Fieldis'
 
   const navLinks = [
     { label: 'Funcionalidades', href: '#funcionalidades' },
