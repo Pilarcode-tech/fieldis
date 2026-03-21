@@ -2,11 +2,5 @@
   "buildCommand": "cd ../.. && npx turbo run build --filter=@fieldis/web",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "API_URL": "@api_url",
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-  }
+  "framework": "nextjs"
 }
