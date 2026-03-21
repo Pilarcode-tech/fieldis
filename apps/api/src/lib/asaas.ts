@@ -18,6 +18,8 @@ interface AsaasSubscription {
   id: string
   status: string
   invoiceUrl?: string
+  bankSlipUrl?: string
+  paymentUrl?: string
 }
 
 export async function createCustomer(data: {
@@ -26,10 +28,14 @@ export async function createCustomer(data: {
   cpfCnpj: string
   phone?: string
 }): Promise<AsaasCustomer> {
+  const cleanPhone = data.phone?.replace(/\D/g, '')
+  const phone = cleanPhone && cleanPhone.length >= 10 ? cleanPhone : undefined
+
   const payload = {
-    ...data,
+    name: data.name,
+    email: data.email,
     cpfCnpj: data.cpfCnpj.replace(/\D/g, ''),
-    phone: data.phone?.replace(/\D/g, '') || undefined,
+    ...(phone ? { phone } : {}),
   }
   const res = await fetch(`${ASAAS_BASE_URL}/customers`, {
     method: 'POST',
@@ -61,7 +67,14 @@ export async function createSubscription(data: {
     const err = await res.json().catch(() => ({}))
     throw new Error(`Asaas createSubscription failed: ${JSON.stringify(err)}`)
   }
-  return res.json()
+  const subscription = await res.json()
+
+  // Normalize payment URL from different Asaas response fields
+  const paymentUrl = subscription.invoiceUrl
+    || subscription.bankSlipUrl
+    || `${ASAAS_BASE_URL.replace('/api/v3', '')}/i/${subscription.id}`
+
+  return { ...subscription, paymentUrl }
 }
 
 export async function getSubscription(id: string): Promise<AsaasSubscription> {

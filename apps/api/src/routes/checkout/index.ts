@@ -98,7 +98,7 @@ export default async function checkoutRoutes(fastify: FastifyInstance) {
 
       return reply.send({
         subscriptionId: subscription.id,
-        paymentUrl: subscription.invoiceUrl || null,
+        paymentUrl: subscription.paymentUrl || null,
       })
     } catch (err) {
       request.log.error(err)
