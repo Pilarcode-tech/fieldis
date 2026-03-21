@@ -77,6 +77,12 @@ export async function createSubscription(data: {
   return { ...subscription, paymentUrl }
 }
 
+export async function getSubscriptionPayments(subscriptionId: string): Promise<{ data: Array<{ id: string; invoiceUrl: string; bankSlipUrl: string; status: string }> }> {
+  const res = await fetch(`${ASAAS_BASE_URL}/payments?subscription=${subscriptionId}`, { headers })
+  if (!res.ok) throw new Error('Asaas getSubscriptionPayments failed')
+  return res.json()
+}
+
 export async function getSubscription(id: string): Promise<AsaasSubscription> {
   const res = await fetch(`${ASAAS_BASE_URL}/subscriptions/${id}`, { headers })
   if (!res.ok) throw new Error('Asaas getSubscription failed')

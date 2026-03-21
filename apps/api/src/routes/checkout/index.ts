@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from '@fieldis/database'
-import { createCustomer, createSubscription } from '../../lib/asaas'
+import { createCustomer, createSubscription, getSubscriptionPayments } from '../../lib/asaas'
 
 const PLAN_VALUES: Record<string, number> = {
   BASICO: 297.00,
@@ -96,9 +96,21 @@ export default async function checkoutRoutes(fastify: FastifyInstance) {
         },
       })
 
+      // Wait for Asaas to generate the first payment
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      const payments = await getSubscriptionPayments(subscription.id)
+      const firstPayment = payments.data?.[0]
+
+      const paymentUrl = firstPayment?.invoiceUrl
+        || firstPayment?.bankSlipUrl
+        || subscription.paymentUrl
+        || null
+
       return reply.send({
         subscriptionId: subscription.id,
-        paymentUrl: subscription.paymentUrl || null,
+        paymentUrl,
+        paymentId: firstPayment?.id || null,
       })
     } catch (err) {
       request.log.error(err)
