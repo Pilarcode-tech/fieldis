@@ -5,28 +5,39 @@ import { superAdminGuard } from '../../middleware/superAdminGuard'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
+// Helper to bypass RLS for super admin queries
+async function withBypassRLS<T>(fn: () => Promise<T>): Promise<T> {
+  await prisma.$executeRawUnsafe(`SET LOCAL "app.current_tenant" = ''`)
+  // Temporarily disable RLS by setting role to bypass
+  await prisma.$executeRawUnsafe(`SET LOCAL "app.bypass_rls" = 'on'`)
+  return fn()
+}
+
+// Helper to set tenant context for RLS operations on a specific company
+async function withTenantContext<T>(companyId: string, fn: () => Promise<T>): Promise<T> {
+  await prisma.$executeRawUnsafe(`SET LOCAL "app.current_tenant" = '${companyId}'`)
+  return fn()
+}
+
 export default async function adminRoutes(fastify: FastifyInstance) {
   fastify.addHook('preHandler', tenantMiddleware)
   fastify.addHook('preHandler', superAdminGuard)
 
   // GET /stats - Platform-wide statistics
   fastify.get('/stats', async (_request: FastifyRequest, reply: FastifyReply) => {
-    const [
-      totalCompanies,
-      activeCompanies,
-      totalUsers,
-      totalEmployees,
-      companiesByPlan,
-    ] = await Promise.all([
+    // Company table has no RLS, User/Employee do — use $transaction to bypass
+    const [totalCompanies, activeCompanies, companiesByPlan] = await Promise.all([
       prisma.company.count(),
       prisma.company.count({ where: { active: true } }),
-      prisma.user.count({ where: { role: { not: 'SUPER_ADMIN' } } }),
-      prisma.employee.count(),
       prisma.company.groupBy({
         by: ['plan'],
         _count: { id: true },
       }),
     ])
+
+    // Count users and employees via raw SQL to bypass RLS
+    const userCount = await prisma.$queryRaw<[{ count: bigint }]>`SELECT COUNT(*) as count FROM "User" WHERE role != 'SUPER_ADMIN'`
+    const employeeCount = await prisma.$queryRaw<[{ count: bigint }]>`SELECT COUNT(*) as count FROM "Employee"`
 
     const planCounts = Object.fromEntries(
       companiesByPlan.map((p) => [p.plan, p._count.id]),
@@ -36,8 +47,8 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       totalCompanies,
       activeCompanies,
       inactiveCompanies: totalCompanies - activeCompanies,
-      totalUsers,
-      totalEmployees,
+      totalUsers: Number(userCount[0].count),
+      totalEmployees: Number(employeeCount[0].count),
       companiesByPlan: planCounts,
     })
   })
@@ -74,6 +85,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       where.active = query.active === 'true'
     }
 
+    // Company table has no RLS — safe to query directly
     const [companies, total] = await Promise.all([
       prisma.company.findMany({
         where,
@@ -160,41 +172,51 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     }
 
     // Generate a temporary password
-    const tempPassword = randomBytes(4).toString('hex') // 8-char hex password
+    const tempPassword = randomBytes(4).toString('hex')
     const hashedPassword = await bcrypt.hash(tempPassword, 10)
 
-    const company = await prisma.company.create({
-      data: {
-        name: body.name,
-        cnpj: body.cnpj,
-        plan: (body.plan as 'BASICO' | 'PROFISSIONAL' | 'EMPRESARIAL') || 'BASICO',
-        active: true,
-        phone: body.phone,
-        email: body.email,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        zipCode: body.zipCode,
-      },
-    })
+    // Use $transaction to set tenant context for RLS tables
+    const result = await prisma.$transaction(async (tx) => {
+      // Create company (no RLS on Company table)
+      const company = await tx.company.create({
+        data: {
+          name: body.name,
+          cnpj: body.cnpj,
+          plan: (body.plan as 'BASICO' | 'PROFISSIONAL' | 'EMPRESARIAL') || 'BASICO',
+          active: true,
+          phone: body.phone,
+          email: body.email,
+          address: body.address,
+          city: body.city,
+          state: body.state,
+          zipCode: body.zipCode,
+        },
+      })
 
-    const adminUser = await prisma.user.create({
-      data: {
-        companyId: company.id,
-        email: body.adminEmail,
-        name: body.adminName,
-        password: hashedPassword,
-        role: 'COMPANY_ADMIN',
-        active: true,
-      },
+      // Set tenant context to the new company so RLS allows the User INSERT
+      await tx.$executeRawUnsafe(`SET LOCAL "app.current_tenant" = '${company.id}'`)
+
+      // Create admin user (User table has RLS)
+      const adminUser = await tx.user.create({
+        data: {
+          companyId: company.id,
+          email: body.adminEmail,
+          name: body.adminName,
+          password: hashedPassword,
+          role: 'COMPANY_ADMIN',
+          active: true,
+        },
+      })
+
+      return { company, adminUser }
     })
 
     return reply.status(201).send({
-      company,
+      company: result.company,
       adminUser: {
-        id: adminUser.id,
-        email: adminUser.email,
-        name: adminUser.name,
+        id: result.adminUser.id,
+        email: result.adminUser.email,
+        name: result.adminUser.name,
         tempPassword,
       },
     })
@@ -264,17 +286,22 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Empresa não encontrada' })
     }
 
-    const users = await prisma.user.findMany({
-      where: { companyId: id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        active: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
+    // Use $transaction to set tenant context for RLS
+    const users = await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`SET LOCAL "app.current_tenant" = '${id}'`)
+
+      return tx.user.findMany({
+        where: { companyId: id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          active: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      })
     })
 
     return reply.send(users)
