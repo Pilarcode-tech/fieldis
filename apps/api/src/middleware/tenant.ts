@@ -5,7 +5,7 @@ import { redis } from '../lib/redis'
 interface JwtPayload {
   jti?: string
   userId: string
-  companyId: string
+  companyId: string | null
   role: string
   email: string
   employeeId: string | null

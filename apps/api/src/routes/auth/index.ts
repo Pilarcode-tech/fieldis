@@ -118,7 +118,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       const payload = request.user as {
         jti?: string
         userId: string
-        companyId: string
+        companyId: string | null
         role: string
         email: string
         employeeId: string | null
