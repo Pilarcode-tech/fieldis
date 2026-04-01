@@ -23,7 +23,8 @@ api.interceptors.response.use(
       await signOut({ callbackUrl: '/login' })
     }
     if (error.response?.status === 403 && error.response?.data?.code === 'SUBSCRIPTION_INACTIVE') {
-      if (typeof window !== 'undefined') {
+      const session = await getSession()
+      if (session?.user?.role !== 'SUPER_ADMIN' && typeof window !== 'undefined') {
         window.location.href = '/assinatura-inativa'
       }
     }

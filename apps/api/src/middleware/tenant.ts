@@ -43,6 +43,15 @@ export async function tenantMiddleware(
       }
     }
 
+    // SUPER_ADMIN bypasses tenant checks (platform-level user)
+    if (decoded.role === 'SUPER_ADMIN') {
+      request.companyId = decoded.companyId || ''
+      request.userId = decoded.userId
+      request.role = decoded.role
+      request.employeeId = null
+      return
+    }
+
     if (!decoded.companyId) {
       reply.status(403).send({ error: 'Empresa nao identificada no token' })
       return

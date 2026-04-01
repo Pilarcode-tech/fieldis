@@ -41,14 +41,43 @@ export default async function authRoutes(fastify: FastifyInstance) {
         return reply.status(401).send({ error: 'Credenciais invalidas' })
       }
 
-      if (!user.company.active) {
-        return reply.status(403).send({ error: 'Empresa inativa' })
-      }
-
       const passwordValid = await bcrypt.compare(password, user.password)
 
       if (!passwordValid) {
         return reply.status(401).send({ error: 'Credenciais invalidas' })
+      }
+
+      // SUPER_ADMIN doesn't need company check
+      if (user.role === 'SUPER_ADMIN') {
+        const jti = randomUUID()
+        const accessToken = fastify.jwt.sign(
+          {
+            jti,
+            userId: user.id,
+            companyId: null,
+            role: user.role,
+            email: user.email,
+            employeeId: null,
+          },
+          { expiresIn: process.env.JWT_EXPIRES_IN || '8h' },
+        )
+
+        return reply.send({
+          accessToken,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            companyId: null,
+            companyName: 'Fieldis Admin',
+            employeeId: null,
+          },
+        })
+      }
+
+      if (!user.company?.active) {
+        return reply.status(403).send({ error: 'Empresa inativa' })
       }
 
       const jti = randomUUID()
@@ -72,7 +101,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email: user.email,
           role: user.role,
           companyId: user.companyId,
-          companyName: user.company.name,
+          companyName: user.company?.name ?? '',
           employeeId: user.employeeId ?? null,
         },
       })

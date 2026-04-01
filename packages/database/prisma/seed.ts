@@ -6,6 +6,25 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // ── Super Admin (platform owner) ────────────────────────
+  const superAdminPassword = hashSync('super123', 10)
+
+  await prisma.user.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000000' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000000',
+      companyId: null,
+      email: 'super@fieldis.com.br',
+      name: 'Super Admin',
+      password: superAdminPassword,
+      role: 'SUPER_ADMIN',
+      active: true,
+    },
+  })
+
+  console.log('Super Admin created: super@fieldis.com.br / super123')
+
   // ── Company ──────────────────────────────────────────────
   const company = await prisma.company.upsert({
     where: { cnpj: '12.345.678/0001-90' },

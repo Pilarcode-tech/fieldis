@@ -23,6 +23,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (status === 'authenticated' && session?.user && !session.user.role) {
       signOut({ callbackUrl: '/login' })
     }
+    // Redirect SUPER_ADMIN to admin panel
+    if (status === 'authenticated' && session?.user?.role === 'SUPER_ADMIN') {
+      router.push('/admin')
+    }
   }, [status, session, router])
 
   useEffect(() => {

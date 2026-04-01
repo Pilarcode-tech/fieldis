@@ -54,8 +54,8 @@ export const authOptions: AuthOptions = {
         token.accessToken = user.accessToken
         token.id = user.id
         token.role = user.role
-        token.companyId = user.companyId
-        token.companyName = user.companyName
+        token.companyId = user.companyId ?? null
+        token.companyName = user.companyName ?? ''
         token.employeeId = user.employeeId ?? null
       }
       return token
@@ -66,7 +66,7 @@ export const authOptions: AuthOptions = {
         ...session.user,
         id: token.id as string,
         role: (token.role as string) || '',
-        companyId: token.companyId as string,
+        companyId: (token.companyId as string | null) ?? null,
         companyName: (token.companyName as string) || '',
         employeeId: (token.employeeId as string) ?? null,
       }
