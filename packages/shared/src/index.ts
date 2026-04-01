@@ -106,6 +106,33 @@ export type CreateAdvance = z.infer<typeof CreateAdvanceSchema>
 export type CreatePayrollPeriod = z.infer<typeof CreatePayrollPeriodSchema>
 export type AllocateEmployee = z.infer<typeof AllocateEmployeeSchema>
 
+// ============ Plan Limits ============
+
+export const PLAN_LIMITS = {
+  BASICO: {
+    employees: 30,
+    users: 5,
+    obras: 5,
+  },
+  PROFISSIONAL: {
+    employees: 100,
+    users: 15,
+    obras: 20,
+  },
+  EMPRESARIAL: {
+    employees: Infinity,
+    users: Infinity,
+    obras: Infinity,
+  },
+} as const
+
+export type PlanType = keyof typeof PLAN_LIMITS
+
+export function getPlanLimit(plan: string, resource: 'employees' | 'users' | 'obras'): number {
+  const limits = PLAN_LIMITS[plan as PlanType]
+  return limits?.[resource] ?? PLAN_LIMITS.BASICO[resource]
+}
+
 // ============ Utility Functions ============
 
 export function formatCurrency(value: number): string {

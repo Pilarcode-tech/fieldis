@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from '@fieldis/database'
-import { CreateEmployeeSchema, UpdateEmployeeSchema } from '@fieldis/shared'
+import { CreateEmployeeSchema, UpdateEmployeeSchema, getPlanLimit } from '@fieldis/shared'
 import { tenantMiddleware } from '../../middleware/tenant'
 import { roleGuard } from '../../middleware/roleGuard'
 import { extname } from 'path'
@@ -116,10 +116,9 @@ export default async function employeeRoutes(fastify: FastifyInstance) {
       const data = parsed.data
 
       // Check plan employee limit
-      const PLAN_LIMITS: Record<string, number> = { BASICO: 30, PROFISSIONAL: 100, EMPRESARIAL: Infinity }
       const company = await prisma.company.findUnique({ where: { id: companyId }, select: { plan: true } })
       const activeCount = await prisma.employee.count({ where: { companyId, status: { not: 'TERMINATED' } } })
-      const limit = PLAN_LIMITS[company?.plan ?? 'BASICO'] ?? 30
+      const limit = getPlanLimit(company?.plan ?? 'BASICO', 'employees')
       if (activeCount >= limit) {
         return reply.status(403).send({
           error: 'Limite de funcionários atingido para o plano atual.',

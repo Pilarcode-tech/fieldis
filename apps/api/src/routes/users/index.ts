@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from '@fieldis/database'
+import { getPlanLimit } from '@fieldis/shared'
 import { tenantMiddleware } from '../../middleware/tenant'
 import { roleGuard } from '../../middleware/roleGuard'
 import bcrypt from 'bcryptjs'
@@ -151,6 +152,20 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
       if (request.role === 'RH_MANAGER' && !RH_MANAGER_ALLOWED_ROLES.includes(body.role)) {
         return reply.status(403).send({ error: 'Voce nao pode criar usuarios com essa role' })
+      }
+
+      // Check plan user limit
+      const company = await prisma.company.findUnique({ where: { id: companyId }, select: { plan: true } })
+      const activeUserCount = await prisma.user.count({ where: { companyId, active: true } })
+      const userLimit = getPlanLimit(company?.plan ?? 'BASICO', 'users')
+      if (activeUserCount >= userLimit) {
+        return reply.status(403).send({
+          error: 'Limite de usuários atingido para o plano atual.',
+          code: 'PLAN_LIMIT_REACHED',
+          limit: userLimit,
+          current: activeUserCount,
+          plan: company?.plan,
+        })
       }
 
       // Check email uniqueness within company

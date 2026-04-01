@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from '@fieldis/database'
-import { CreateObraSchema, UpdateObraSchema, AllocateEmployeeSchema } from '@fieldis/shared'
+import { CreateObraSchema, UpdateObraSchema, AllocateEmployeeSchema, getPlanLimit } from '@fieldis/shared'
 import { tenantMiddleware } from '../../middleware/tenant'
 import { roleGuard } from '../../middleware/roleGuard'
 
@@ -123,6 +123,20 @@ export default async function obraRoutes(fastify: FastifyInstance) {
       }
 
       const data = parsed.data
+
+      // Check plan obra limit
+      const company = await prisma.company.findUnique({ where: { id: companyId }, select: { plan: true } })
+      const activeCount = await prisma.obra.count({ where: { companyId, status: { not: 'FINISHED' } } })
+      const limit = getPlanLimit(company?.plan ?? 'BASICO', 'obras')
+      if (activeCount >= limit) {
+        return reply.status(403).send({
+          error: 'Limite de obras atingido para o plano atual.',
+          code: 'PLAN_LIMIT_REACHED',
+          limit,
+          current: activeCount,
+          plan: company?.plan,
+        })
+      }
 
       const obra = await prisma.obra.create({
         data: {
