@@ -171,6 +171,12 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       return reply.status(409).send({ error: 'CNPJ já cadastrado' })
     }
 
+    // Check if admin email already exists in any company (login uses findFirst)
+    const existingEmail = await prisma.$queryRaw<[{ count: bigint }]>`SELECT COUNT(*) as count FROM "User" WHERE email = ${body.adminEmail}`
+    if (Number(existingEmail[0].count) > 0) {
+      return reply.status(409).send({ error: 'Este email já está em uso por outro usuário' })
+    }
+
     // Generate a temporary password
     const tempPassword = randomBytes(4).toString('hex')
     const hashedPassword = await bcrypt.hash(tempPassword, 10)
