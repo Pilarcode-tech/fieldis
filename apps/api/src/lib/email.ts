@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export async function sendWelcomeEmail(data: {
   to: string
@@ -9,6 +9,10 @@ export async function sendWelcomeEmail(data: {
   tempPassword: string
   loginUrl: string
 }): Promise<void> {
+  if (!resend) {
+    console.log('[EMAIL] Resend not configured — skipping email to', data.to)
+    return
+  }
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL || 'Fieldis <noreply@fieldis.com.br>',
     to: data.to,

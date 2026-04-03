@@ -282,8 +282,8 @@ export default function FuncionarioDetailPage() {
               <CardTitle>Dados Pessoais</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <fieldset disabled={!canManageEmployees}>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <fieldset disabled={!canManageEmployees} className="space-y-6">
                 {/* Personal */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input label="Nome Completo" error={errors.name?.message} {...register('name')} />
@@ -430,14 +430,14 @@ export default function FuncionarioDetailPage() {
                   </div>
                 )}
 
+                </fieldset>
                 {canManageEmployees && (
-                  <div className="flex justify-end pt-4">
+                  <div className="flex justify-end pt-6">
                     <Button type="submit" disabled={!isDirty || updateEmployee.isPending}>
                       {updateEmployee.isPending ? 'Salvando...' : 'Salvar Alterações'}
                     </Button>
                   </div>
                 )}
-                </fieldset>
               </form>
             </CardContent>
           </Card>
