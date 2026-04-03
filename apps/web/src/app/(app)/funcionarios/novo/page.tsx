@@ -10,6 +10,7 @@ import { Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { Select } from '@/components/ui/Select'
 import { useCreateEmployee } from '@/hooks/useApi'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ export default function NovoFuncionarioPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
     trigger,
     formState: { errors },
   } = useForm<CreateEmployee>({
@@ -226,14 +228,13 @@ export default function NovoFuncionarioPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input
+                <CurrencyInput
                   label="Salário Base"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  placeholder="0,00"
                   error={errors.baseSalary?.message}
                   className="font-mono-data"
-                  {...register('baseSalary', { valueAsNumber: true })}
+                  value={watch('baseSalary')}
+                  onValueChange={(v) => setValue('baseSalary', v, { shouldValidate: true })}
                 />
                 <Select
                   label="Tipo de Salário"

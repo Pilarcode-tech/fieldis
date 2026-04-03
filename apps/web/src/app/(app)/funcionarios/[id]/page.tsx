@@ -10,6 +10,7 @@ import { ArrowLeft, FileCheck, FileX, Upload, Eye, ChevronDown, ExternalLink, Do
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 import { Select } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
@@ -281,7 +282,7 @@ export default function FuncionarioDetailPage() {
               <CardTitle>Dados Pessoais</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <fieldset disabled={!canManageEmployees}>
                 {/* Personal */}
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -312,12 +313,12 @@ export default function FuncionarioDetailPage() {
 
                 {/* Contract — accordeon */}
                 <div className="rounded-lg border border-[#e3e6ed]">
-                  <button type="button" onClick={() => setContractOpen(!contractOpen)} className="flex w-full items-center justify-between px-4 py-3 text-sm text-[#6b7280] hover:bg-[#f9fafb] transition-colors rounded-lg">
+                  <button type="button" onClick={() => setContractOpen(!contractOpen)} className="flex w-full items-center justify-between px-5 py-4 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors rounded-lg">
                     <span>Dados contratuais</span>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', contractOpen && 'rotate-180')} />
                   </button>
                   {contractOpen && (
-                    <div className="space-y-4 border-t border-[#e3e6ed] px-4 py-4">
+                    <div className="space-y-4 border-t border-[#e3e6ed] px-5 py-5">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <Input label="Função" error={errors.role?.message} {...register('role')} />
                         <Input label="Departamento" {...register('department')} />
@@ -345,14 +346,14 @@ export default function FuncionarioDetailPage() {
 
                 {/* Remuneration — accordeon */}
                 <div className="rounded-lg border border-[#e3e6ed]">
-                  <button type="button" onClick={() => setRemunerationOpen(!remunerationOpen)} className="flex w-full items-center justify-between px-4 py-3 text-sm text-[#6b7280] hover:bg-[#f9fafb] transition-colors rounded-lg">
+                  <button type="button" onClick={() => setRemunerationOpen(!remunerationOpen)} className="flex w-full items-center justify-between px-5 py-4 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors rounded-lg">
                     <span>Remuneração e adicionais</span>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', remunerationOpen && 'rotate-180')} />
                   </button>
                   {remunerationOpen && (
-                    <div className="space-y-4 border-t border-[#e3e6ed] px-4 py-4">
+                    <div className="space-y-4 border-t border-[#e3e6ed] px-5 py-5">
                       {canViewSensitiveData && (
-                        <Input label="Salário Base" type="number" step="0.01" className="font-mono-data" error={errors.baseSalary?.message} {...register('baseSalary', { valueAsNumber: true })} />
+                        <CurrencyInput label="Salário Base" className="font-mono-data" error={errors.baseSalary?.message} value={watch('baseSalary')} onValueChange={(v) => setValue('baseSalary', v, { shouldDirty: true })} disabled={!canManageEmployees} />
                       )}
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
@@ -381,12 +382,12 @@ export default function FuncionarioDetailPage() {
 
                 {/* Benefits — accordeon */}
                 <div className="rounded-lg border border-[#e3e6ed]">
-                  <button type="button" onClick={() => setBenefitsOpen(!benefitsOpen)} className="flex w-full items-center justify-between px-4 py-3 text-sm text-[#6b7280] hover:bg-[#f9fafb] transition-colors rounded-lg">
+                  <button type="button" onClick={() => setBenefitsOpen(!benefitsOpen)} className="flex w-full items-center justify-between px-5 py-4 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors rounded-lg">
                     <span>Benefícios</span>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', benefitsOpen && 'rotate-180')} />
                   </button>
                   {benefitsOpen && (
-                    <div className="space-y-4 border-t border-[#e3e6ed] px-4 py-4">
+                    <div className="space-y-4 border-t border-[#e3e6ed] px-5 py-5">
                       <label className="flex items-center gap-2">
                         <input type="checkbox" className="h-4 w-4 rounded border-[#e3e6ed] text-[#2563eb]" {...register('hasVT')} />
                         <span className="text-sm text-[#111827]">Vale-transporte</span>
@@ -413,12 +414,12 @@ export default function FuncionarioDetailPage() {
                 {/* Bank — accordeon */}
                 {canViewSensitiveData && (
                   <div className="rounded-lg border border-[#e3e6ed]">
-                    <button type="button" onClick={() => setBankOpen(!bankOpen)} className="flex w-full items-center justify-between px-4 py-3 text-sm text-[#6b7280] hover:bg-[#f9fafb] transition-colors rounded-lg">
+                    <button type="button" onClick={() => setBankOpen(!bankOpen)} className="flex w-full items-center justify-between px-5 py-4 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors rounded-lg">
                       <span>Dados bancários</span>
                       <ChevronDown className={cn('h-4 w-4 transition-transform', bankOpen && 'rotate-180')} />
                     </button>
                     {bankOpen && (
-                      <div className="space-y-4 border-t border-[#e3e6ed] px-4 py-4">
+                      <div className="space-y-4 border-t border-[#e3e6ed] px-5 py-5">
                         <div className="grid gap-4 sm:grid-cols-3">
                           <Input label="Código do Banco" placeholder="Ex: 001" className="font-mono-data" {...register('bankCode')} />
                           <Input label="Agência" placeholder="0000" className="font-mono-data" {...register('bankAgency')} />
@@ -429,9 +430,9 @@ export default function FuncionarioDetailPage() {
                   </div>
                 )}
 
-                {isDirty && canManageEmployees && (
-                  <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={updateEmployee.isPending}>
+                {canManageEmployees && (
+                  <div className="flex justify-end pt-4">
+                    <Button type="submit" disabled={!isDirty || updateEmployee.isPending}>
                       {updateEmployee.isPending ? 'Salvando...' : 'Salvar Alterações'}
                     </Button>
                   </div>
