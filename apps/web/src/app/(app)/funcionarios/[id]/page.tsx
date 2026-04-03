@@ -107,15 +107,15 @@ export default function FuncionarioDetailPage() {
       pis: employee.pis ?? undefined,
       ctpsNumber: employee.ctpsNumber ?? undefined,
       hasInsalubrity: employee.hasInsalubrity,
-      insalubrityGrade: employee.insalubrityGrade as 'MINIMO' | 'MEDIO' | 'MAXIMO' | undefined,
+      insalubrityGrade: (employee.insalubrityGrade as 'MINIMO' | 'MEDIO' | 'MAXIMO') ?? undefined,
       hasPericulosity: employee.hasPericulosity,
       hasNightShift: employee.hasNightShift,
       hasVT: employee.hasVT,
       hasVA: employee.hasVA,
-      vaAmount: employee.vaAmount,
-      dependentsCount: employee.dependentsCount,
+      vaAmount: employee.vaAmount ?? 0,
+      dependentsCount: employee.dependentsCount ?? 0,
       hasAlimony: employee.hasAlimony,
-      alimonyAmount: employee.alimonyAmount,
+      alimonyAmount: employee.alimonyAmount ?? 0,
       bankCode: employee.bankCode ?? undefined,
       bankAgency: employee.bankAgency ?? undefined,
       bankAccount: employee.bankAccount ?? undefined,
@@ -282,7 +282,7 @@ export default function FuncionarioDetailPage() {
               <CardTitle>Dados Pessoais</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit, () => toast.error('Verifique os campos do formulário.'))}>
                 <fieldset disabled={!canManageEmployees} className="space-y-6">
                 {/* Personal */}
                 <div className="grid gap-4 sm:grid-cols-2">
